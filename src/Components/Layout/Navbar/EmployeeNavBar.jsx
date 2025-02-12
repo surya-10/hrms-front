@@ -31,13 +31,13 @@ const navItems = [
         icon: ClipboardSignature, 
         path: '/user/leave-requests'
     },
+     { id: 'announcement', label: 'Announcement', icon: GrAnnounce, path: "/user/announcement" },
     { 
         id: 'profile', 
         label: 'Profile', 
         icon: UserCircle,
         path: '/user/profile'
-    },
-     { id: 'announcement', label: 'Announcement', icon: GrAnnounce, path: "/user/announcement" },
+    }
 ];
 
 const EmployeeNavBar = ({ onNavigate = () => {} }) => {

@@ -10,7 +10,7 @@ const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 const AttendenceAndLeaveChart = () => {
     const userId = localStorage.getItem("userId");
     const token = localStorage.getItem("token");
-    
+
     // Get current month name
     const getCurrentMonth = () => {
         const monthNames = ["January", "February", "March", "April", "May", "June",
@@ -48,7 +48,7 @@ const AttendenceAndLeaveChart = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                
+
                 // Fetch attendance data
                 const attendanceResponse = await axios.get(
                     `http://localhost:3002/api/routes/attendence/get-loginHistory/${userId}`,
@@ -72,7 +72,7 @@ const AttendenceAndLeaveChart = () => {
 
                 // Get current month's data
                 const currentMonthNumber = months.find(m => m.name === selectedMonth)?.value || currentMonth;
-                
+
                 // Fetch monthly leave data
                 const leaveResponse = await axios.get(
                     `http://localhost:3002/api/routes/time-off/monthly-leaves/${userId}/${currentMonthNumber}/2025`,
@@ -83,15 +83,15 @@ const AttendenceAndLeaveChart = () => {
 
                 if (leaveResponse.data) {
                     const monthlyLeaveData = leaveResponse.data;
-                    const totalApprovedLeaves = (monthlyLeaveData.total_leave_taken || 0) + 
-                                              ((monthlyLeaveData.half_days_taken || 0) * 0.5);
+                    const totalApprovedLeaves = (monthlyLeaveData.total_leave_taken || 0) +
+                        ((monthlyLeaveData.half_days_taken || 0) * 0.5);
                     setApprovedLeaves(totalApprovedLeaves);
                 }
 
                 // Update monthly data display
                 updateMonthlyData(currentMonthNumber, filterRecords);
                 setShowPieChart(true);
-                
+
             } catch (error) {
                 console.error('Error fetching data:', error);
                 toast.error('Error fetching attendance data');
@@ -118,9 +118,9 @@ const AttendenceAndLeaveChart = () => {
                     record.endTime = data[i].logHistory[j].endTime;
                 }
             }
-            record.colors = { 
-                color: colorPairs[i % colorPairs.length].color, 
-                bgColor: colorPairs[i % colorPairs.length].bgColor 
+            record.colors = {
+                color: colorPairs[i % colorPairs.length].color,
+                bgColor: colorPairs[i % colorPairs.length].bgColor
             };
             records.push(record);
         }
@@ -148,15 +148,15 @@ const AttendenceAndLeaveChart = () => {
 
         const month = months.find(m => m.value === monthNumber);
         let totalWorkingDays = month?.totalWorkingDays || 26;
-        
+
         // If it's current month, adjust working days to current date
         if (monthNumber === currentMonth) {
             totalWorkingDays = Math.min(totalWorkingDays, currentDay);
         }
-        
+
         setWorkingDays(totalWorkingDays);
         setEachMonthData(monthFilter);
-        
+
         // Calculate total leaves (absences)
         const daysPresent = monthFilter.length;
         const totalAbsences = totalWorkingDays - daysPresent;
@@ -166,7 +166,7 @@ const AttendenceAndLeaveChart = () => {
     const handleMonthChange = async (e) => {
         const newMonth = e.target.value;
         setSelectedMonth(newMonth);
-        
+
         const monthNumber = months.find(m => m.name === newMonth)?.value;
         if (!monthNumber) return;
 
@@ -181,12 +181,10 @@ const AttendenceAndLeaveChart = () => {
 
             if (leaveResponse.data) {
                 const monthlyLeaveData = leaveResponse.data;
-                const totalApprovedLeaves = (monthlyLeaveData.total_leave_taken || 0) + 
-                                          ((monthlyLeaveData.half_days_taken || 0) * 0.5);
+                const totalApprovedLeaves = (monthlyLeaveData.total_leave_taken || 0) +
+                    ((monthlyLeaveData.half_days_taken || 0) * 0.5);
                 setApprovedLeaves(totalApprovedLeaves);
             }
-
-            // Update the display for the selected month
             updateMonthlyData(monthNumber, attendanceData);
         } catch (error) {
             console.error('Error fetching leave data:', error);
@@ -196,16 +194,15 @@ const AttendenceAndLeaveChart = () => {
 
     const calculateAttendancePercentage = () => {
         if (workingDays === 0) return 0;
-        
+
         const daysPresent = eachMonthData.length;
-        // Consider approved leaves as present days for attendance percentage
         const totalPresentDays = daysPresent + approvedLeaves;
         const percentage = (totalPresentDays / workingDays) * 100;
-        return Math.min(100, Math.round(percentage)); // Cap at 100%
+        return Math.min(100, Math.round(percentage));
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-lg border-blue-500 p-3 flex flex-col grow h-[430px]">
+        <div className="bg-white rounded-lg shadow-lg border-blue-500 p-3 flex flex-col grow min-h-[430px]  relative">
             {loading ? (
                 <div className="grow w-[380px] h-[430px] flex justify-center items-center">
                     <DotsLoader />
@@ -229,7 +226,7 @@ const AttendenceAndLeaveChart = () => {
                             {eachMonthData.length === 0 ? (
                                 <p className="text-center text-gray-500">No attendance records found for {selectedMonth}.</p>
                             ) : (
-                                <ResponsiveContainer width="100%" height={200}>
+                                <ResponsiveContainer width="100%" height={250}>
                                     <PieChart>
                                         <Pie
                                             data={[
@@ -237,10 +234,10 @@ const AttendenceAndLeaveChart = () => {
                                                 { name: "Approved Leaves", value: approvedLeaves },
                                                 { name: "Absences", value: Math.max(0, totalLeaves - approvedLeaves) }
                                             ]}
-                                            cx="50%"
+                                            cx="35%"
                                             cy="40%"
                                             innerRadius={0}
-                                            outerRadius={70}
+                                            outerRadius={90}
                                             dataKey="value"
                                         >
                                             {COLORS.map((color, idx) => (
@@ -256,33 +253,40 @@ const AttendenceAndLeaveChart = () => {
                     )}
                     {eachMonthData.length > 0 && (
                         <div className="space-y-3 mt-2">
-                            <div className="flex items-center space-x-2">
-                                <div className="w-3 h-3 rounded-full bg-blue-900"></div>
-                                <span className="text-gray-700 text-sm">
-                                    <span className="font-medium">{workingDays}</span> Working Days
-                                </span>
+                            <div className="flex  gap-5">
+                                <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 rounded-full bg-teal-500"></div>
+                                    <span className="text-gray-700 text-sm">
+                                    No of Working Days: 
+                                        <span className="font-medium ms-2">{workingDays}</span> 
+                                    </span>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 rounded-full bg-teal-500"></div>
+                                    <span className="text-gray-700 text-sm">
+                                    No of Worked Days: 
+                                        <span className="font-medium ms-2">{eachMonthData.length}</span> 
+                                    </span>
+                                </div>
                             </div>
-                            <div className="flex items-center space-x-2">
-                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                <span className="text-gray-700 text-sm">
-                                    <span className="font-medium">{eachMonthData.length}</span> Present Days
-                                </span>
+                            <div className="flex  gap-5">
+                                <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 rounded-full bg-teal-500"></div>
+                                    <span className="text-gray-700 text-sm">
+                                        No of Approved Leaves: 
+                                        <span className="font-medium  ms-2">{approvedLeaves}</span> 
+                                    </span>
+                                </div>
+                                {/* <div className="flex items-center space-x-2">
+                                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                    <span className="text-gray-700 text-sm">
+                                        <span className="font-medium">{Math.max(0, totalLeaves - approvedLeaves)}</span> Absences
+                                    </span>
+                                </div> */}
                             </div>
-                            <div className="flex items-center space-x-2">
-                                <div className="w-3 h-3 rounded-full bg-violet-500"></div>
-                                <span className="text-gray-700 text-sm">
-                                    <span className="font-medium">{approvedLeaves}</span> Approved Leaves
-                                </span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                                <span className="text-gray-700 text-sm">
-                                    <span className="font-medium">{Math.max(0, totalLeaves - approvedLeaves)}</span> Absences
-                                </span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                                <span className="text-gray-700 text-sm">
+                            <div className="flex items-center space-x-2 absolute top-16 right-4">
+                                <div className="w-2 h-2 rounded-full bg-teal-500"></div>
+                                <span className="text-gray-700 text-md">
                                     <span className="font-bold">{calculateAttendancePercentage()}%</span> Attendance
                                     {calculateAttendancePercentage() >= 100 && (
                                         <span className="ml-1 text-green-600">(Perfect)</span>

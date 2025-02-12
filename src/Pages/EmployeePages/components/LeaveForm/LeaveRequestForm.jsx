@@ -241,6 +241,7 @@ const LeaveRequest = ({ onClose = () => { }, onLeaveSubmitted = () => { } }) => 
     };
 
     const submitLeaveRequest = async (data) => {
+        console.log(data)
         try {
             if(halfDayValue==="half"){
                 data.leave_request.is_half_day_leave=true;
@@ -271,7 +272,8 @@ const LeaveRequest = ({ onClose = () => { }, onLeaveSubmitted = () => { } }) => 
                 onClose();
                 return true;
             }
-        } catch (error) {
+        } 
+        catch (error) {
             console.error('Error submitting leave request:', error);
             const errorMessage = error.response?.data?.message || 'Failed to submit leave request. Please try again.';
             toast.error(errorMessage);
@@ -354,7 +356,7 @@ const LeaveRequest = ({ onClose = () => { }, onLeaveSubmitted = () => { } }) => 
                                             type="date"
                                             value={selectedDate}
                                             onChange={(e) => setSelectedDate(e.target.value)}
-                                            max={new Date().toISOString().split('T')[0]}
+                                            // max={new Date().toISOString().split('T')[0]}
                                             className='w-full border-2 border-gray-200 rounded-lg p-2'
                                         />
                                         {errors.date && <span className="text-red-500 text-sm">{errors.date}</span>}
@@ -411,7 +413,7 @@ const LeaveRequest = ({ onClose = () => { }, onLeaveSubmitted = () => { } }) => 
                                                 type="date"
                                                 value={selectedDate}
                                                 onChange={(e) => setSelectedDate(e.target.value)}
-                                                max={new Date().toISOString().split('T')[0]}
+                                                // max={new Date().toISOString().split('T')[0]}
                                                 className='w-full border-2 border-gray-200 rounded-lg p-2'
                                             />
                                             {errors.date && <span className="text-red-500 text-sm">{errors.date}</span>}
@@ -437,7 +439,7 @@ const LeaveRequest = ({ onClose = () => { }, onLeaveSubmitted = () => { } }) => 
                                                 type="date"
                                                 value={startDate}
                                                 onChange={(e) => setStartDate(e.target.value)}
-                                                max={new Date().toISOString().split('T')[0]}
+                                                // max={new Date().toISOString().split('T')[0]}
                                                 className='w-full border-2 border-gray-200 rounded-lg p-2'
                                             />
                                         </div>
@@ -447,7 +449,7 @@ const LeaveRequest = ({ onClose = () => { }, onLeaveSubmitted = () => { } }) => 
                                                 type="date"
                                                 value={endDate}
                                                 onChange={(e) => setEndDate(e.target.value)}
-                                                max={new Date().toISOString().split('T')[0]}
+                                                // max={new Date().toISOString().split('T')[0]}
                                                 className='w-full border-2 border-gray-200 rounded-lg p-2'
                                             />
                                         </div>

@@ -14,7 +14,7 @@ import AttendancePieChart from './managerDashboard/attendanceChart';
 import LoadingAnimation from '../../Components/Layout/animations/LoadingAnimation';
 import CircleChart from './managerDashboard/TotalEmployees';
 import axios from 'axios';
-import LeaveDetailsForm from './ViewLeaveForm';
+import LeaveDetailsForm from './Components/All leave records/ViewLeaveForm';
 
 export const colorPairs = [
     { color: "#AB47BC", bgColor: "#FFDBEC" },
@@ -27,6 +27,9 @@ export const colorPairs = [
 const ManagerDashboard = () => {
     const [logggedInUser, setLoggedInUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [employeesError, setEmployeesError] = useState(null);
+    const [leaveRecordsError, setLeaveRecordsError] = useState(null);
     const userId = localStorage.getItem("userId");
     const token = localStorage.getItem("token");
     const [roleBasedCount, setRoleBasedCount] = useState([]);
@@ -49,6 +52,7 @@ const ManagerDashboard = () => {
 
     const getEmployees = async () => {
         try {
+            setEmployeesError(null);
             const response = await axios.get(
                 `http://localhost:3002/api/routes/employee/view-employees/${userId}`,
                 {
@@ -59,7 +63,14 @@ const ManagerDashboard = () => {
             );
 
             let employeesData = response.data.data;
-            console.log(employeesData)
+            if (!employeesData || employeesData.length === 0) {
+                setEmployeesError("No employees found");
+                setEmployees([]);
+                setAllEmployees([]);
+                setViewLeave(true)
+                return;
+            }
+
             setAllEmployees(employeesData)
             const maxEmployees = 5;
 
@@ -69,7 +80,6 @@ const ManagerDashboard = () => {
                 ...data,
                 colorPairs: colorPairs[ind % colorPairs.length] || { primary: "#000", secondary: "#fff" },
             }));
-            console.log(dataWithColor)
 
             localStorage.setItem("selectedEmployees", JSON.stringify(dataWithColor));
 
@@ -89,7 +99,9 @@ const ManagerDashboard = () => {
             setRoleBasedCount(result);
         } catch (error) {
             console.error("Error fetching employees:", error);
-            alert("Failed to fetch employees. Please try again later.");
+            setEmployeesError(error.response?.data?.message || "Failed to fetch employees. Please try again later.");
+            setEmployees([]);
+            setAllEmployees([]);
         }
     };
     const updateLeaveStatus = async (leaveId, newStatus, comments) => {
@@ -116,13 +128,16 @@ const ManagerDashboard = () => {
 
     const loadUser = () => {
         try {
+            setError(null);
             const data = localStorage.getItem("user");
-            if (data) {
-                setLoggedInUser(JSON.parse(data));
-                console.log(JSON.parse(data))
+            if (!data) {
+                setError("No user data found. Please login again.");
+                return;
             }
+            setLoggedInUser(JSON.parse(data));
         } catch (error) {
             console.error("Error loading user data:", error);
+            setError("Error loading user data. Please login again.");
             localStorage.clear();
         } finally {
             setLoading(false);
@@ -131,6 +146,7 @@ const ManagerDashboard = () => {
 
     const getAllLeaveRecords = async () => {
         try {
+            setLeaveRecordsError(null);
             const response = await axios.get(
                 `http://localhost:3002/api/routes/time-off/view-timeoff/${userId}`,
                 {
@@ -139,11 +155,16 @@ const ManagerDashboard = () => {
                     },
                 }
             );
-            console.log(response.data.data)
-            console.log(allEmployees)
-            const leaveData = response.data.data.map((leave, ind) => {
 
-                const user = allEmployees.find((emp, ind) => emp._id == leave.user_id);
+            if (!response.data.data) {
+                setTopFiveLeaveRecords([]);
+                setTopFivePermissionRecords([]);
+                setViewLeave(true);
+                return;
+            }
+
+            const leaveData = response.data.data.map((leave, ind) => {
+                const user = allEmployees.find((emp) => emp._id == leave.user_id);
                 return {
                     ...leave,
                     first_name: user?.first_name,
@@ -152,30 +173,25 @@ const ManagerDashboard = () => {
                     colorPairs: colorPairs[ind % colorPairs.length]
                 };
             });
+
             localStorage.setItem("leaveRecords", JSON.stringify(leaveData));
-            setLeaveRecords(leaveData)
+            setLeaveRecords(leaveData);
+
             const onlyLeave = leaveData.filter((data) => data.timeoff_type !== "permission");
             const onlyPermission = leaveData.filter((data) => data.timeoff_type === "permission");
             setLeaveRequests(leaveData);
             const pendingLeave = onlyLeave.filter((leave) => leave.status_name === "Requested");
             const pendingPermission = onlyPermission.filter((leave) => leave.status_name === "Requested");
-            console.log(pendingLeave)
-            if (pendingLeave.length > 5) {
-                setTopFiveLeaveRecords(pendingLeave.slice(0, 5))
-            }
-            else {
-                setTopFiveLeaveRecords(pendingLeave);
-            }
-            if (pendingPermission.length > 5) {
-                setTopFivePermissionRecords(pendingPermission.slice(0, 5))
-            }
-            else {
-                setTopFivePermissionRecords(pendingPermission);
-            }
 
+            setTopFiveLeaveRecords(pendingLeave.slice(0, 5));
+            setTopFivePermissionRecords(pendingPermission.slice(0, 5));
             setViewLeave(true);
         } catch (error) {
             console.error("Error fetching leave records:", error);
+            setLeaveRecordsError(error.response?.data?.message || "Failed to fetch leave records");
+            setTopFiveLeaveRecords([]);
+            setTopFivePermissionRecords([]);
+            setViewLeave(true);
         }
     };
 
@@ -279,6 +295,17 @@ const ManagerDashboard = () => {
             </div>
         )
     }
+
+    if (error) {
+        return (
+            <div className='flex justify-center items-center w-[100%] min-h-screen'>
+                <div className="text-red-500 text-center p-4 bg-red-50 rounded-lg">
+                    {error}
+                </div>
+            </div>
+        )
+    }
+
     return (
         <>
             <div className=''>
@@ -306,80 +333,88 @@ const ManagerDashboard = () => {
                                         </button>
                                     </div>
                                 </div>
-                                {viewLeave ? (
-                                    topFiveLeaveRecords.length > 0 ? (
-                                        <div className="overflow-y-auto space-y-2 mt-2 gap-8 h-auto">
-                                            {topFiveLeaveRecords.map((data, ind) => (
-                                                <div key={ind} className="border rounded-lg py-2 px-3 hover:bg-gray-50 transition-all duration-200">
-                                                    <div className="flex items-center gap-3 justify-between">
-                                                        <div className="flex items-center gap-3 flex-1">
-                                                            <Avatar.Group>
-                                                                <Tooltip title={`${data.first_name} ${data.last_name}`} placement="top">
-                                                                    <Avatar
-                                                                        style={{
-                                                                            backgroundColor: bgColors[ind % bgColors.length],
-                                                                            color: colors[ind % colors.length],
-                                                                        }}
-                                                                    >
-                                                                        {data.first_name.slice(0, 1).toUpperCase()}
-                                                                        {data.last_name.slice(0, 1).toUpperCase()}
-                                                                    </Avatar>
-                                                                </Tooltip>
-                                                            </Avatar.Group>
-                                                            <div className="flex flex-col gap-2">
-                                                                <div className='flex gap-2'>
-                                                                    <span className="font-semibold text-sm">
-                                                                        {data.first_name} {data.last_name}
-                                                                    </span>
-                                                                    <Tag
-                                                                        color={colors[ind % colors.length]}
-                                                                        className="opacity-55 text-[12px] px-1"
-                                                                    >
-                                                                        {data.timeoff_type === "permission"
-                                                                            ? "Permission"
-                                                                            : data.timeoff_type === "full_day"
-                                                                                ? "Full Day"
-                                                                                : "Half Day"}
-
-                                                                    </Tag>
-                                                                </div>
-                                                                <span className="text-xs text-gray-600">
-                                                                 {data.timeoff_type=="full_day" ? <p>{data.leave_type} • {formatDate(data.leave_date[0].start_date)} - {formatDate(data.leave_date[0].end_date)}</p> 
-                                                                 :
-                                                                 <p>{data.leave_type} • {data.leave_date[0].start_date=="9 AM " ?"First half":"Second half" }• {formatDate(data.leave_date[0].date)}</p>
-                                                                 }
-                                                                   
+                                {leaveRecordsError ? (
+                                    <div className="flex justify-center items-center h-[100px] text-red-500 bg-red-50 m-4 rounded-lg p-4">
+                                        <div className="text-center">
+                                            <p className="font-medium">Error Loading Leave Requests</p>
+                                            <p className="text-sm mt-1">{leaveRecordsError}</p>
+                                        </div>
+                                    </div>
+                                ) : !viewLeave ? (
+                                    <div className="flex justify-center items-center h-[100px]">
+                                        <LoadingAnimation />
+                                    </div>
+                                ) : topFiveLeaveRecords.length > 0 ? (
+                                    <div className="overflow-y-auto space-y-2 mt-2 gap-8 h-auto">
+                                        {topFiveLeaveRecords.map((data, ind) => (
+                                            <div key={ind} className="border rounded-lg py-2 px-3 hover:bg-gray-50 transition-all duration-200">
+                                                <div className="flex items-center gap-3 justify-between">
+                                                    <div className="flex items-center gap-3 flex-1">
+                                                        <Avatar.Group>
+                                                            <Tooltip title={`${data.first_name} ${data.last_name}`} placement="top">
+                                                                <Avatar
+                                                                    style={{
+                                                                        backgroundColor: bgColors[ind % bgColors.length],
+                                                                        color: colors[ind % colors.length],
+                                                                    }}
+                                                                >
+                                                                    {data.first_name.slice(0, 1).toUpperCase()}
+                                                                    {data.last_name.slice(0, 1).toUpperCase()}
+                                                                </Avatar>
+                                                            </Tooltip>
+                                                        </Avatar.Group>
+                                                        <div className="flex flex-col gap-2">
+                                                            <div className='flex gap-2'>
+                                                                <span className="font-semibold text-sm">
+                                                                    {data.first_name} {data.last_name}
                                                                 </span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
+                                                                <Tag
+                                                                    color={colors[ind % colors.length]}
+                                                                    className="opacity-55 text-[12px] px-1"
+                                                                >
+                                                                    {data.timeoff_type === "permission"
+                                                                        ? "Permission"
+                                                                        : data.timeoff_type === "full_day"
+                                                                            ? "Full Day"
+                                                                            : "Half Day"}
 
-                                                            <button
-                                                                onClick={() => handleApprove(data._id, data)}
-                                                                title='view'
-                                                                className="px-3 py-1 text-xs bg-[#EFF1F4] rounded-md hover:bg-[#c7cacf] transition-all text-gray-400"
-                                                            >
-                                                                <Eye size={14} />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleLeaveApprove(data._id, data)}
-                                                                className="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-all"
-                                                            >
-                                                                Approve
-                                                            </button>
+                                                                </Tag>
+                                                            </div>
+                                                            <span className="text-xs text-gray-600">
+                                                                {data.timeoff_type == "full_day" ? <p>{data.leave_type} • {formatDate(data.leave_date[0].start_date)} - {formatDate(data.leave_date[0].end_date)}</p>
+                                                                    :
+                                                                    <p>{data.leave_type} • {data.leave_date[0].start_date == "9 AM " ? "First half" : "Second half"}• {formatDate(data.leave_date[0].date)}</p>
+                                                                }
+                                                            </span>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className={`flex justify-center items-center ${topFiveLeaveRecords.length === 0 ? "h-[100px]" : "h-[200px]"} text-gray-500`}>
-                                            No pending leave requests
-                                        </div>
+                                                    <div className="flex items-center gap-2">
 
-                                    )
+                                                        <button
+                                                            onClick={() => handleApprove(data._id, data)}
+                                                            title='view'
+                                                            className="px-3 py-1 text-xs bg-[#EFF1F4] rounded-md hover:bg-[#c7cacf] transition-all text-gray-400"
+                                                        >
+                                                            <Eye size={14} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleLeaveApprove(data._id, data)}
+                                                            className="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-all"
+                                                        >
+                                                            Approve
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 ) : (
-                                    <LoadingAnimation />
+                                    <div className="flex justify-center items-center h-[200px] text-gray-500 bg-gray-50 m-4 rounded-lg">
+                                        <div className="text-center">
+                                            <p className="font-medium">No Pending Leave Requests</p>
+                                            <p className="text-sm mt-1">All leave requests have been processed</p>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
 
@@ -404,70 +439,80 @@ const ManagerDashboard = () => {
                                         </button>
                                     </div>
                                 </div>
-                                {viewLeave ? (
-                                    topFivePermissionRecords.length > 0 ? (
-                                        <div className="overflow-y-auto space-y-2 mt-2 gap-8  h-auto">
-                                            {topFivePermissionRecords.map((data, ind) => (
-                                                <div key={ind} className="border rounded-lg p-3 hover:bg-gray-50 transition-all duration-200">
-                                                    <div className="flex items-center gap-3 justify-between">
-                                                        <div className="flex items-center gap-3 flex-1">
-                                                            <Avatar.Group>
-                                                                <Tooltip title={`${data.first_name} ${data.last_name}`} placement="top">
-                                                                    <Avatar
-                                                                        style={{
-                                                                            backgroundColor: bgColors[ind % bgColors.length],
-                                                                            color: colors[ind % colors.length],
-                                                                        }}
-                                                                    >
-                                                                        {data.first_name[0].toUpperCase()}
-                                                                        {data.last_name[0].toUpperCase()}
-                                                                    </Avatar>
-                                                                </Tooltip>
-                                                            </Avatar.Group>
-                                                            <div className="flex flex-col gap-2">
-                                                                <div className='flex gap-2'>
-                                                                    <span className="font-semibold text-sm">
-                                                                        {data.first_name} {data.last_name}
-                                                                    </span>
-                                                                    <Tag
-                                                                        color={colors[ind % colors.length]}
-                                                                        className="opacity-55 text-[12px] px-1"
-                                                                    >
-                                                                        Permission
-                                                                    </Tag>
-                                                                </div>
-                                                                <span className="text-xs text-gray-600">
-                                                                    {data.timeoff_type} • {formatDate(data.leave_date[0].date)} - {data.leave_date[0].start_date} to {data.leave_date[0].end_date}
+                                {leaveRecordsError ? (
+                                    <div className="flex justify-center items-center h-[100px] text-red-500 bg-red-50 m-4 rounded-lg p-4">
+                                        <div className="text-center">
+                                            <p className="font-medium">Error Loading Permission Requests</p>
+                                            <p className="text-sm mt-1">{leaveRecordsError}</p>
+                                        </div>
+                                    </div>
+                                ) : !viewLeave ? (
+                                    <div className="flex justify-center items-center h-[100px]">
+                                        <LoadingAnimation />
+                                    </div>
+                                ) : topFivePermissionRecords.length > 0 ? (
+                                    <div className="overflow-y-auto space-y-2 mt-2 gap-8 h-auto">
+                                        {topFivePermissionRecords.map((data, ind) => (
+                                            <div key={ind} className="border rounded-lg p-3 hover:bg-gray-50 transition-all duration-200">
+                                                <div className="flex items-center gap-3 justify-between">
+                                                    <div className="flex items-center gap-3 flex-1">
+                                                        <Avatar.Group>
+                                                            <Tooltip title={`${data.first_name} ${data.last_name}`} placement="top">
+                                                                <Avatar
+                                                                    style={{
+                                                                        backgroundColor: bgColors[ind % bgColors.length],
+                                                                        color: colors[ind % colors.length],
+                                                                    }}
+                                                                >
+                                                                    {data.first_name[0].toUpperCase()}
+                                                                    {data.last_name[0].toUpperCase()}
+                                                                </Avatar>
+                                                            </Tooltip>
+                                                        </Avatar.Group>
+                                                        <div className="flex flex-col gap-2">
+                                                            <div className='flex gap-2'>
+                                                                <span className="font-semibold text-sm">
+                                                                    {data.first_name} {data.last_name}
                                                                 </span>
+                                                                <Tag
+                                                                    color={colors[ind % colors.length]}
+                                                                    className="opacity-55 text-[12px] px-1"
+                                                                >
+                                                                    Permission
+                                                                </Tag>
                                                             </div>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-
-                                                            <button
-                                                                onClick={() => handleApprove(data._id, data)}
-                                                                title='view'
-                                                                className="px-3 py-1 text-xs bg-[#EFF1F4] rounded-md hover:bg-[#c7cacf] transition-all"
-                                                            >
-                                                                <Eye size={14} />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleLeaveApprove(data._id, data)}
-                                                                className="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-all"
-                                                            >
-                                                                Approve
-                                                            </button>
+                                                            <span className="text-xs text-gray-600">
+                                                                {data.timeoff_type} • {formatDate(data.leave_date[0].date)} - {data.leave_date[0].start_date} to {data.leave_date[0].end_date}
+                                                            </span>
                                                         </div>
                                                     </div>
+                                                    <div className="flex items-center gap-2">
+
+                                                        <button
+                                                            onClick={() => handleApprove(data._id, data)}
+                                                            title='view'
+                                                            className="px-3 py-1 text-xs bg-[#EFF1F4] rounded-md hover:bg-[#c7cacf] transition-all"
+                                                        >
+                                                            <Eye size={14} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleLeaveApprove(data._id, data)}
+                                                            className="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-all"
+                                                        >
+                                                            Approve
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className={`flex justify-center items-center ${topFivePermissionRecords.length === 0 ? "h-[100px]" : "h-[200px]"} text-gray-500`}>
-                                            No pending permission requests
-                                        </div>
-                                    )
+                                            </div>
+                                        ))}
+                                    </div>
                                 ) : (
-                                    <LoadingAnimation />
+                                    <div className="flex justify-center items-center h-[200px] text-gray-500 bg-gray-50 m-4 rounded-lg">
+                                        <div className="text-center">
+                                            <p className="font-medium">No Pending Permission Requests</p>
+                                            <p className="text-sm mt-1">All permission requests have been processed</p>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -484,31 +529,53 @@ const ManagerDashboard = () => {
                                     View All
                                 </button>
                             </div>
-                            {employees.map((user, index) => (
-                                <div className='flex flex-col '>
-                                    <div key={index} className="flex flex-row gap-6 p-2 items-center cursor-pointer" onClick={() => navigate(`/manager/view-employee/${user._id}`)}>
-                                        <img src="https://res.cloudinary.com/da6xossg7/image/upload/v1735627700/user1_k9cfrj.jpg" alt="{user.userName}" className="bg-red-300 h-[40px] w-[40px] rounded-full" />
+                            {employeesError ? (
+                                <div className="flex justify-center items-center h-[100px] text-red-500 bg-red-50 m-4 rounded-lg">
+                                    {employeesError}
+                                </div>
+                            ) : employees.length > 0 ? (
+                                employees.map((user, index) => (
+                                    <div className='flex flex-col '>
+                                        <div key={index} className="flex flex-row gap-6 p-2 items-center cursor-pointer" onClick={() => navigate(`/manager/view-employee/${user._id}`)}>
+                                            <img src="https://res.cloudinary.com/da6xossg7/image/upload/v1735627700/user1_k9cfrj.jpg" alt="{user.userName}" className="bg-red-300 h-[40px] w-[40px] rounded-full" />
 
-                                        <div className="flex flex-col justify-center items-start">
-                                            <p className='text-black text-[15px]'
-                                            >{user.first_name} {user.last_name}</p>
-                                            <p className='text-[gray] text-[10px] rounded px-2 py-1'
-                                                style={{
-                                                    background: bgColors[index % bgColors.length],
-                                                    color: colors[index % colors.length]
-                                                }}>{user.profession_id.designation}</p>
-                                        </div>
-                                        <div className="flex flex-row gap-3 items-center justify-end flex-1">
-                                            <IoIosMail size={17} color="black" />
-                                            <BiMessageRoundedDots size={17} color="black" />
+                                            <div className="flex flex-col justify-center items-start">
+                                                <p className='text-black text-[15px]'
+                                                >{user.first_name} {user.last_name}</p>
+                                                <p className='text-[gray] text-[10px] rounded px-2 py-1'
+                                                    style={{
+                                                        background: bgColors[index % bgColors.length],
+                                                        color: colors[index % colors.length]
+                                                    }}>{user.profession_id.designation}</p>
+                                            </div>
+                                            <div className="flex flex-row gap-3 items-center justify-end flex-1">
+                                                <IoIosMail size={17} color="black" />
+                                                <BiMessageRoundedDots size={17} color="black" />
+                                            </div>
                                         </div>
                                     </div>
+                                ))
+                            ) : (
+                                <div className={`flex justify-center items-center ${employees.length === 0 ? "h-[100px]" : "h-[200px]"} text-gray-500`}>
+                                    No employees found
                                 </div>
-                            ))}
+                            )}
                         </div>
-                        <div className='w-1/2'>
+                        <div className='w-1/2 shadow-lg p-3'>
                             <p className='mt-5 font-[500]'>Team Distribution</p>
-                            <CircleChart data={roleBasedCount} />
+                            {roleBasedCount.length > 0 ?
+                                <div>
+
+                                    <CircleChart data={roleBasedCount} />
+                                </div>
+                                :
+                                <div className="flex justify-center items-center h-[200px] text-gray-500 bg-gray-50 m-4 rounded-lg">
+                                        <div className="text-center">
+                                            <p className="font-medium">No teams members found</p>
+                                            {/* <p className="text-sm mt-1">All permission requests have been processed</p> */}
+                                        </div>
+                                    </div>
+                            }
                         </div>
 
                     </div>

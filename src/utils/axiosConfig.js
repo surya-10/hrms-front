@@ -20,12 +20,9 @@ axiosInstance.interceptors.request.use(
         return Promise.reject(error);
     }
 );
-
-// Response interceptor
 axiosInstance.interceptors.response.use(
     (response) => response,
     async (error) => {
-        // Only logout on 401 unauthorized
         if (error.response?.status === 401) {
             await handleLogout();
         }

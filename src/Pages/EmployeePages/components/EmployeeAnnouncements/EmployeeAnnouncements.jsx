@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Search, X, CheckCircle, Bell, Filter, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const EmployeeAnnouncement = () => {
+const EmployeeDashboard = () => {
   const [announcements, setAnnouncements] = useState([]);
   const [filteredAnnouncements, setFilteredAnnouncements] = useState([]);
   const [filter, setFilter] = useState("All");
@@ -73,9 +73,15 @@ const EmployeeAnnouncement = () => {
   };
 
   const markAsRead = async (id) => {
+    const employeeId = "YOUR_EMPLOYEE_ID"; // Replace with the actual employee ID (you may need to get this from context or props)
+
     try {
       await fetch(`http://localhost:3002/api/announcements/${id}/read`, {
         method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ employeeId }), // Send the employee ID in the request body
       });
       setAnnouncements((prev) =>
         prev.map((a) => (a._id === id ? { ...a, read: true } : a))
@@ -90,7 +96,7 @@ const EmployeeAnnouncement = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header and Stats */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-[#2B3674] mb-6">Employee Dashboard</h1>
+          <h1 className="text-lg font-bold text-[#2B3674] mb-6">Announcements</h1>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             <div className="bg-white p-6 rounded-xl shadow-md">
@@ -220,4 +226,4 @@ const EmployeeAnnouncement = () => {
   );
 };
 
-export default EmployeeAnnouncement;
+export default EmployeeDashboard;

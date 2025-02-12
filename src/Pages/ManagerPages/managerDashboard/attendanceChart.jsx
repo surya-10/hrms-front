@@ -71,6 +71,10 @@ const AttendancePieChart = () => {
                     }
                 );
                 console.log("Fetched Attendance Data:", response.data);
+                if(!response.data.data){
+                    setAttendanceData([])
+                    return 
+                }
                 setAttendanceData(response.data.data);
                 setLabels(response.data.data.map(item => item.userName));
 

@@ -7,15 +7,15 @@ import AllEmployees from "./Pages/AdminPages/AllEmployees";
 import Profile from "./Pages/AdminPages/viewEmployees/ViewEmployeeDetails";
 import EditEmployee from "./Pages/AdminPages/viewEmployees/EditEmployee";
 import ManagerDashboard from "./Pages/ManagerPages/ManagerHome";
-import LeaveDetailsForm from "./Pages/ManagerPages/ViewLeaveForm";
-import LeaveRecords from "./Pages/ManagerPages/LeaveRecords";
-import ViewAllEmployees from "./Pages/ManagerPages/ViewAllEmployees";
+import LeaveDetailsForm from "./Pages/ManagerPages/Components/All leave records/ViewLeaveForm";
+import LeaveRecords from "./Pages/ManagerPages/Components/All leave records/LeaveRecords";
+import ViewAllEmployees from "./Pages/ManagerPages/Components/List employees/ViewAllEmployees";
 import EmployeeHome from "./Pages/EmployeePages/EmployeeHome";
-import AttendenceHistory from "./Pages/ManagerPages/ViewAttendenceRecords";
-import EmployeeLeaveRecords from "./Pages/EmployeePages/EmployeeLeaveRecords";
+import AttendenceHistory from "./Pages/ManagerPages/Components/Attendence history/ViewAttendenceRecords";
+import EmployeeLeaveRecords from "./Pages/EmployeePages/components/Employee leave history/EmployeeLeaveRecords";
 import EmployeeProfile from "./Pages/EmployeePages/components/EmployeeProfile/EmployeeProfile";
 import ManagerProfile from "./Pages/ManagerPages/ManagerProfile";
-import ApproveLeave from "./Pages/ManagerPages/ApproveOrRejectLeave";
+import ApproveLeave from "./Pages/ManagerPages/Components/Approve or reject leave requests/ApproveOrRejectLeave";
 
 // import EmployeeForm from "./Pages/AdminPages/AddEmployee";
 

@@ -6,7 +6,7 @@ import { Clock, CheckCircle, Calendar as CalendarIcon, Bell, UserRound, UserRoun
 import EmployeeRoles from '../AdminPages/EmployeeRoles';
 import { Link, useNavigate } from 'react-router-dom';
 import AttendenceRocord from '../AdminPages/PieChart';
-import CheckInHistory from '../AdminPages/CheckInHistory';
+import CheckInHistory from '../AdminPages/components/checkin History/CheckInHistory';
 import WeeklyWorkingHours from '../AdminPages/WeeklyWorkingHours';
 import EmployeeByDepartment from './EmployeeByDepartment';
 import LeaveRecords from '../AdminPages/LeaveRecords';
@@ -80,7 +80,7 @@ const EmployeeDashboard = () => {
 
 
   return (
-    <div className="p-2 bg-[#EFEFF5] min-h-screen">
+    <div className="p-2 bg-[#EEECFF] min-h-screen">
       <p className='py-2 text-gray-800 text-xl font-[600]'>Dashboard</p>
       <div className='bg-white rounded-lg h-[100px] my-4 flex justify-start gap-2 ps-2 items-center'>
         <p className='p-7 bg-[#a2a8d3] rounded-full'>

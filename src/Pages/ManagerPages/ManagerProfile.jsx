@@ -315,7 +315,7 @@ const ManagerProfile = () => {
                                     </div>
                                     <div className='w-full flex justify-end'>
                                         <span className='text-end'>
-                                            {employee.contact_details[0].phone_number}
+                                            {employee.phone}
                                         </span>
                                     </div>
                                 </div>
@@ -358,7 +358,7 @@ const ManagerProfile = () => {
                                         </span>
                                     </div>
                                 </div>
-                                <div className="flex flex-row p-3 justify-between items-center">
+                                {/* <div className="flex flex-row p-3 justify-between items-center">
                                     <div className="w-full flex justify-start gap-2 text-[gray]">
                                         <MapPinCheck strokeWidth={1.25} />
                                         <span>Address</span>
@@ -366,7 +366,7 @@ const ManagerProfile = () => {
                                     <div className="w-full flex justify-end" >
                                         <span className='text-end'>{employee.location_details[0].current_address}</span>
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
                         {/* <div className='flex lg:flex-row flex-col gap-3'>
@@ -431,7 +431,7 @@ const ManagerProfile = () => {
 
                         </div> */}
                         <div>
-                            <div className="bg-white w-full flex flex-col gap-4 rounded-lg">
+                            {/* <div className="bg-white w-full flex flex-col gap-4 rounded-lg">
                                 <div className="flex flex-row justify-between p-3">
                                     <span className="text-lg font-[500]">Emergency Contact Number</span>
                                     <div className="h-[20px] w-[20px] flex items-center justify-center hover:bg-[#E8E9EA] rounded cursor-pointer">
@@ -466,7 +466,7 @@ const ManagerProfile = () => {
                                         <p className="text-gray-500 text-center mt-4">No emergency contacts available.</p>
                                     )}
                                 </div>
-                            </div>
+                            </div> */}
 
                         </div>
 

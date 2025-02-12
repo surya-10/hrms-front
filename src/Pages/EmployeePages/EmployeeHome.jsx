@@ -1,4 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import leave from "../../assets/images/leave2.png";
+// import leave from "../../assets/images/run-3.gif";
+// import chatbot from "../../assets/images/chatbot-logo.webp"
+import chatbot from "../../assets/images/chatbot-logo.png"
 import {
     Chart as ChartJS,
     ArcElement,
@@ -9,13 +13,14 @@ import LeaveRequest from './components/LeaveForm/LeaveRequestForm';
 import LoadingAnimation from '../../Components/Layout/animations/LoadingAnimation';
 import axiosInstance from '../../utils/axiosConfig';
 import { isTokenExpired, handleLogout } from '../../utils/auth';
-import PunchInOut from './components/PunchInOut';
+import PunchInOut from './components/Punch-In And Punch-out/PunchInOut';
 import AttendenceAndLeaveChart from './components/AttendenceAndLeaveChart/AttendenceAndLeaveChart';
-import ShowemployeeStats from './ShowemployeeStats';
-import EmployeeBreaks from './components/EmployeeBreaks';
-import { UserRound, Pencil } from 'lucide-react';
+import ShowemployeeStats from './components/Employee stats/ShowemployeeStats';
+import EmployeeBreaks from './components/Employee Breaks recorder/EmployeeBreaks';
+import { UserRound, Pencil, TentTree } from 'lucide-react';
 import PermissionDropdown from './components/Permission requests/EmployeePermissions';
 import EmergencyContactForm from './components/EmergencyContactForm/EmergencyContactForm';
+import ChatBot from '../../Components/chatbot';
 
 ChartJS.register(
     ArcElement,
@@ -24,7 +29,7 @@ ChartJS.register(
 );
 
 function EmployeeHome() {
-
+    const [viewBot, setViewBot] = useState(true)
     const [employee, setEmployee] = useState([])
     const [currentTime, setCurrentTime] = useState('00:00:00');
     const [currentTime2, setCurrentTime2] = useState(new Date().toLocaleTimeString());
@@ -73,7 +78,7 @@ function EmployeeHome() {
 
     useEffect(() => {
         const user = localStorage.getItem('user');
-        console.log(JSON.parse(user))
+        // console.log(JSON.parse(user))
         if (user) {
             setEmployee(JSON.parse(user))
             setShow(true)
@@ -184,7 +189,7 @@ function EmployeeHome() {
         const fetchEmergencyContacts = async () => {
             try {
                 const response = await axiosInstance.get(`/api/routes/profile/get-profile/${userId}`);
-                console.log("Emergency contacts response:", response.data);
+                // console.log("Emergency contacts response:", response.data);
                 if (response.data.userDetails && response.data.userDetails[0].profile.emergency_contact) {
                     setEmergencyContacts(response.data.userDetails[0].profile.emergency_contact);
                 }
@@ -211,12 +216,12 @@ function EmployeeHome() {
             const monthlyLeaveResponse = await axiosInstance.get(
                 `/api/routes/time-off/monthly-leaves/${userId}/${selectedMonth}/${selectedYear}`
             );
-            
-            console.log("Monthly Leave Response:", monthlyLeaveResponse);
-            
+
+            // console.log("Monthly Leave Response:", monthlyLeaveResponse);
+
             if (monthlyLeaveResponse.data) {
                 const backendData = monthlyLeaveResponse.data;
-                console.log(backendData)
+                // console.log(backendData)
                 setMonthlyLeaveData({
                     month: selectedMonth,
                     year: parseInt(selectedYear),
@@ -226,7 +231,7 @@ function EmployeeHome() {
                     half_day_count: backendData.half_day_count || 0,
                     permission_count: backendData.permission_count || 0
                 });
-                console.log(monthlyLeaveData)
+                // console.log(monthlyLeaveData)
             }
 
             // Refresh attendance and leave history
@@ -251,14 +256,24 @@ function EmployeeHome() {
         refreshLeaveData();
     };
 
+    const handleChat = () => {
+        setViewBot(false)
+    }
+
     return (
-        <div className="min-h-screen bg-[#F0F0FF]">
+        <div className="min-h-screen bg-[#F0F0FF] relative">
+            {/* <div className='fixed right-2 bottom-[80px] z-[1000]' onClick={handleChat}> */}
+
+            <div className='h-[300px] top-[50%] fixed right-2 bottom-[80px] z-[1000]'>
+                <ChatBot />
+            </div>
+            {/* </div> */}
             {show ?
                 <div className=" mx-auto space-y-4 ">
                     <div className=' rounded shadow-lg py-7 px-4 bg-gradient-to-br from-purple-800 to-indigo-700 mt-2'>
                         <div className='flex justify-start items-center gap-3 '>
                             <p className='text-white text-lg' ><UserRound size={37} /></p>
-                            <h2 className="text-lg font-semibold text-gray-800 text-white">Welcome,  {employee.username}</h2>
+                            <h2 className="text-lg font-semibold text-white">Welcome,  {employee.username}</h2>
                         </div>
                     </div>
                     <div className="flex flex-col  md:flex-row gap-4 h-[430px]">
@@ -277,73 +292,21 @@ function EmployeeHome() {
                     </div>
                     <div className="flex flex-row flex-wrap  flex-grow gap-5">
 
-                        <div className="bg-white rounded-lg shadow-lg  border-indigo-500 p-6 flex  flex-col grow w-[380px] h-[430px]">
-                            <div className="flex items-center space-x-4 mb-6">
-                                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-indigo-100 shadow-md">
-                                    <img
-                                        src="https://res.cloudinary.com/da6xossg7/image/upload/v1735627700/user1_k9cfrj.jpg"
-                                        alt="Stephan Peralt"
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-                                <div>
-                                    <h2 className="text-lg font-semibold text-gray-800">{employee.username}</h2>
-                                    <p className="text-sm text-gray-600">{employee.profession.designation}</p>
-                                </div>
-                            </div>
+                        <div className="bg-white rounded-2xl shadow-xl p-8 w-[380px] h-[430px] flex flex-col grow hover:shadow-2xl transition-all duration-300 overflow-y-auto relative">
+                            {/* Background decoration */}
+                            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full blur-3xl -z-10 opacity-60"></div>
+                            <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-blue-100 to-violet-100 rounded-full blur-3xl -z-10 opacity-60"></div>
 
-                            <div className="space-y-4">
-                                <div className="p-2 bg-gray-50 rounded-lg border border-gray-100">
-                                    <p className="text-xs text-gray-500 mb-1">Phone Number</p>
-                                    <p className="text-sm font-medium text-gray-800">{employee.phone}</p>
-                                </div>
-                                <div className="p-2 bg-gray-50 rounded-lg border border-gray-100">
-                                    <p className="text-xs text-gray-500 mb-1">Email Address</p>
-                                    <p className="text-sm font-medium text-gray-800">{employee.email}</p>
-                                </div>
-                                <div className="p-2 bg-gray-50 rounded-lg border border-gray-100">
-                                    <p className="text-xs text-gray-500 mb-1">Report Office</p>
-                                    <p className="text-sm font-medium text-gray-800">{employee.profession.reporting_manager}</p>
-                                </div>
-                                <div className="p-2 bg-gray-50 rounded-lg border border-gray-100">
-                                    <p className="text-xs text-gray-500 mb-1">Joined on</p>
-                                    <p className="text-sm font-medium text-gray-800">{employee.profile.joining_date}</p>
-                                </div>
-                                {/* {emergencyContacts && emergencyContacts.length > 0 && (
-                                    <div className="p-2 bg-gray-50 rounded-lg border border-gray-100">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <p className="text-xs text-gray-500">Emergency Contacts</p>
-                                            <button 
-                                                onClick={() => setShowEmergencyContactForm(true)}
-                                                className="text-indigo-600 hover:text-indigo-800"
-                                            >
-                                                <Pencil size={14} strokeWidth={1.75} />
-                                            </button>
-                                        </div>
-                                        <div className="space-y-2">
-                                            {emergencyContacts.map((contact, index) => (
-                                                <div key={index} className="border-b border-gray-200 last:border-0 pb-2 last:pb-0">
-                                                    <div className="flex justify-between">
-                                                        <p className="text-sm font-medium text-gray-800">{contact.name}</p>
-                                                        <p className="text-xs text-gray-600">{contact.relationship}</p>
-                                                    </div>
-                                                    <p className="text-xs text-gray-600">{contact.phone_number}</p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )} */}
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-lg shadow-lg  border-fuchsia-800  p-6 flex w-[380px] h-[430px] flex-col grow hover:shadow-xl transition-all duration-300 overflow-y-auto">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-lg">Leave Details</h2>
-                                <div className="flex gap-2">
+                            <div className="flex justify-between items-center mb-3">
+                                <h2 className="text-lg font-[500] text-black flex items-center gap-3">
+                                    <span className="h-8 w-1 bg-gradient-to-b from-violet-500 to-indigo-500 rounded-full"></span>
+                                    Leave Details
+                                </h2>
+                                <div className="flex gap-3">
                                     <select
                                         value={selectedMonth}
                                         onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                                        className="p-2 bg-gray-50 text-sm font-medium border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="px-3 py-2 bg-gray-50 text-sm font-medium border-2 border-gray-100 rounded-xl hover:border-indigo-100 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     >
                                         {[
                                             "January", "February", "March", "April", "May", "June",
@@ -355,152 +318,130 @@ function EmployeeHome() {
                                     <select
                                         value={selectedYear}
                                         onChange={(e) => setSelectedYear(e.target.value)}
-                                        className="p-2 bg-gray-50 text-sm font-medium border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="px-3 py-2 bg-gray-50 text-sm font-medium border-2 border-gray-100 rounded-xl hover:border-indigo-100 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     >
-                                        {/* <option value="2024">2024</option> */}
                                         <option value="2025">2025</option>
                                     </select>
                                 </div>
                             </div>
-                            <div className='flex flex-col justify-between gap-5'>
-                                <div className="flex flex-col gap-3">
-                                    <div className="bg-gray-50 p-3 ps-2 rounded-lg">
-                                        <p className="text-gray-600 text-sm">Monthly Leave Quota</p>
-                                        <p className="mt-1">1 day or 2 half-days</p>
-                                    </div>
-                                    <div className="bg-gray-50 p-3 ps-2 rounded-lg">
-                                        <p className="text-gray-600 text-sm">Permissions Taken</p>
-                                        <div className="flex justify-between items-center mt-1">
-                                            <div className="flex items-center gap-2">
-                                                <p>{monthlyLeaveData?.permission_count || 0} of 2</p>
+
+                            <div className='flex flex-row justify-between gap-6'>
+                                <div className="flex flex-col gap-4 w-4/6">
+                                    <div className="grid grid-cols-1 gap-3">
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-3 rounded-xl border border-indigo-100/50 shadow-sm">
+                                                <p className="text-gray-600 text-sm font-medium mb-1">Monthly Quota</p>
+                                                <p className="text-base font-semibold text-indigo-900">1 day or 2 half-days</p>
+                                            </div>
+
+                                            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-3 rounded-xl border border-emerald-100/50 shadow-sm">
+                                                <p className="text-gray-600 text-sm font-medium mb-1">Permissions</p>
+                                                <div className="flex justify-between items-center">
+                                                    <p className="text-base font-semibold text-emerald-900">{monthlyLeaveData?.permission_count || 0} of 2</p>
+                                                    {monthlyLeaveData?.permission_count > 0 && (
+                                                        <span className="text-[10px] px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-medium">
+                                                            Approved
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 {monthlyLeaveData?.permission_count >= 2 && (
-                                                    <span className="text-xs text-amber-600">(Limit Reached)</span>
+                                                    <span className="text-[10px] font-medium text-rose-600 mt-1">(Limit Reached)</span>
                                                 )}
                                             </div>
-                                            {monthlyLeaveData?.permission_count > 0 && (
-                                                <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
-                                                    Approved
-                                                </span>
-                                            )}
                                         </div>
-                                    </div>
-                                    <div className="bg-gray-50 p-3 ps-2 rounded-lg">
-                                        <p className="text-gray-600 text-sm">Regular Leaves Taken</p>
-                                        <div className="flex justify-between items-center mt-1">
-                                            <p>{monthlyLeaveData?.total_leave_taken || 0} days</p>
-                                            {monthlyLeaveData?.total_leave_taken > 0 && (
-                                                <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
-                                                    Approved
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="bg-gray-50 p-3 ps-2 rounded-lg">
-                                        <p className="text-gray-600 text-sm">Half-Day Leaves Taken</p>
-                                        <div className="flex justify-between items-center mt-1">
-                                            <div className="flex items-center gap-2">
-                                                <p>{monthlyLeaveData?.half_days_taken || 0} </p>
-                                                <span className="text-xs text-gray-500">({monthlyLeaveData?.half_day_count || 0} half days)</span>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 rounded-xl border border-blue-100/50 shadow-sm">
+                                                <p className="text-gray-600 text-sm font-medium mb-1">Regular Leaves</p>
+                                                <div className="flex justify-between items-center">
+                                                    <p className="text-base font-semibold text-blue-900">{monthlyLeaveData?.total_leave_taken || 0} days</p>
+                                                    {monthlyLeaveData?.total_leave_taken > 0 && (
+                                                        <span className="text-[10px] px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">
+                                                            Approved
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
-                                            {monthlyLeaveData?.half_days_taken > 0 && (
-                                                <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
-                                                    Approved
-                                                </span>
-                                            )}
+
+                                            <div className="bg-gradient-to-br from-violet-50 to-purple-50 p-3 rounded-xl border border-violet-100/50 shadow-sm">
+                                                <p className="text-gray-600 text-sm font-medium mb-1">Half-Day Leaves</p>
+                                                <div className="flex justify-between items-center">
+                                                    <p className="text-base font-semibold text-violet-900">{monthlyLeaveData?.half_days_taken || 0}</p>
+                                                    {monthlyLeaveData?.half_days_taken > 0 && (
+                                                        <span className="text-[10px] px-2 py-0.5 bg-violet-100 text-violet-700 rounded-full font-medium">
+                                                            Approved
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <span className="text-[10px] text-gray-500">({monthlyLeaveData?.half_day_count || 0} half days)</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="bg-gray-50 p-3 ps-2 rounded-lg">
-                                        <p className="text-gray-600 text-sm">Total Leaves</p>
-                                        <div className="flex justify-between items-center mt-1">
-                                            <p>{monthlyLeaveData?.total_leave_taken + ((monthlyLeaveData?.half_days_taken || 0) * 0.5) || 0} days</p>
-                                            {(monthlyLeaveData?.total_leave_taken + ((monthlyLeaveData?.half_days_taken || 0) * 0.5)) > 1 && (
-                                                <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full">
-                                                    Exceeds Quota
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="bg-gray-50 p-3 ps-2 rounded-lg">
-                                        <p className="text-gray-600 text-sm">Loss of Pay</p>
-                                        <div className="flex justify-between items-center mt-1">
-                                            <p className={monthlyLeaveData?.total_loss_of_pay > 0 ? "text-red-600" : "text-gray-900"}>
-                                                {monthlyLeaveData?.total_loss_of_pay || 0} days
-                                            </p>
-                                            {monthlyLeaveData?.total_loss_of_pay > 0 && (
-                                                <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full">
-                                                    LOP Applied
-                                                </span>
-                                            )}
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-3 rounded-xl border border-amber-100/50 shadow-sm">
+                                                <p className="text-gray-600 text-sm font-medium mb-1">Total Leaves</p>
+                                                <div className="flex justify-between items-center">
+                                                    <p className="text-base font-semibold text-amber-900">
+                                                        {monthlyLeaveData?.total_leave_taken + ((monthlyLeaveData?.half_days_taken || 0) * 0.5) || 0} days
+                                                    </p>
+                                                    {(monthlyLeaveData?.total_leave_taken + ((monthlyLeaveData?.half_days_taken || 0) * 0.5)) > 1 && (
+                                                        <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">
+                                                            Exceeds
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-gradient-to-br from-rose-50 to-red-50 p-3 rounded-xl border border-rose-100/50 shadow-sm">
+                                                <p className="text-gray-600 text-sm font-medium mb-1">Loss of Pay</p>
+                                                <div className="flex justify-between items-center">
+                                                    <p className={`text-base font-semibold ${monthlyLeaveData?.total_loss_of_pay > 0 ? "text-rose-700" : "text-gray-900"}`}>
+                                                        {monthlyLeaveData?.total_loss_of_pay || 0} days
+                                                    </p>
+                                                    {monthlyLeaveData?.total_loss_of_pay > 0 && (
+                                                        <span className="text-[10px] px-2 py-0.5 bg-rose-100 text-rose-700 rounded-full font-medium">
+                                                            LOP
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <button
-                                    onClick={() => {
-                                        setShowLeaveForm(true)
-                                        setCloseBtn(true)
-                                    }}
-                                    className="w-full bg-gray-900 text-white py-3 rounded-lg mt-6 hover:bg-gray-800 transition-all transform hover:scale-[1.02] font-medium shadow-lg flex items-center justify-center space-x-2"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                    </svg>
-                                    <span>Apply New Leave</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-lg shadow-lg border-indigo-500 p-6 flex w-[380px] h-[430px] flex-col grow hover:shadow-xl transition-all duration-300">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-lg font-semibold">Emergency Contacts</h2>
-                                <button 
-                                    onClick={() => setShowEmergencyContactForm(true)}
-                                    className="h-8 w-8 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
-                                >
-                                    <Pencil size={16} strokeWidth={1.75} />
-                                </button>
-                            </div>
-                            
-                            {emergencyContacts && emergencyContacts.length > 0 ? (
-                                <div className="space-y-4">
-                                    {emergencyContacts.map((contact, index) => (
-                                        <div key={index} className="p-4 bg-gray-50 rounded-lg">
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <p className="text-xs text-gray-500">Name</p>
-                                                    <p className="font-medium">{contact.name}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs text-gray-500">Relationship</p>
-                                                    <p className="font-medium">{contact.relationship}</p>
-                                                </div>
-                                                <div className="col-span-2">
-                                                    <p className="text-xs text-gray-500">Phone Number</p>
-                                                    <p className="font-medium">{contact.phone_number}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center h-full">
-                                    <p className="text-gray-500 mb-4">No emergency contacts added yet</p>
+                                <div className='w-2/6 flex flex-col justify-start gap-10 mt-4'>
+                                    <div className='relative group'>
+                                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-100 to-violet-100 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+                                        <img src={leave} className='w-full h-48 object-contain relative z-10' />
+                                    </div>
                                     <button
-                                        onClick={() => setShowEmergencyContactForm(true)}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                                        onClick={() => {
+                                            setShowLeaveForm(true)
+                                            setCloseBtn(true)
+                                        }}
+                                        className="w-full bg-gradient-to-r from-indigo-500 to-violet-500 text-white py-3 rounded-xl hover:from-indigo-600 hover:to-violet-600 transition-all transform hover:scale-[1.02] font-medium shadow-lg flex items-center justify-center space-x-2"
                                     >
-                                        Add Emergency Contacts
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
+                                        <span>Apply New Leave</span>
                                     </button>
                                 </div>
-                            )}
+                            </div>
                         </div>
 
-                        <div className='grow w-[380px]'>
+                    </div>
+                    <div className=' w-full flex gap-4'>
+                        <div className='w-2/6 h-[400px]'>
                             <AttendenceAndLeaveChart />
                         </div>
+                        <div className='w-4/6'>
+                            <ShowemployeeStats />
+                        </div>
                     </div>
+
                     <div>
-                        <ShowemployeeStats />
+
                         <PermissionDropdown />
                     </div>
 

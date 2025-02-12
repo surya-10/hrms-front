@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Eye } from "lucide-react";
-// import LeaveDetailsForm from "./ViewLeaveForm";
-import CustomDropdown from "../../Components/Layout/Custom dropdowns/CustomDropdown";
+import LeaveDetailsForm from "./ViewLeaveForm";
+import CustomDropdown from "../../../../Components/Layout/Custom dropdowns/CustomDropdown";
 import axios from "axios";
-import EmployeeCustomDropdown from "../../Components/Layout/Custom dropdowns/EmployeeCustomDropdown";
-import timeOffTypes from "../../utils/parseData/index"
-import { colorPairs } from "../ManagerPages/ManagerHome";
-import LeaveDetailsForm from "../ManagerPages/Components/All leave records/ViewLeaveForm";
-import ViewLeaveForm from "./Leave records/ViewLeaveForm";
+import EmployeeCustomDropdown from "../../../../Components/Layout/Custom dropdowns/EmployeeCustomDropdown";
+import timeOffTypes from "../../../../utils/parseData/index"
 
-const AdminLeaveRecords = () => {
+
+const LeaveRecords = () => {
     const [leaveRecords, setLeaveRecords] = useState([]);
     const [showData, setShowData] = useState(false);
     const [selectedLeave, setSelectedLeave] = useState(null);
@@ -21,10 +19,15 @@ const AdminLeaveRecords = () => {
     const [employees, setEmployees] = useState([]);
     const userId = localStorage.getItem("userId");
     const token = localStorage.getItem("token");
-    const [leaveRequests, setLeaveRequests] = useState([]);
 
     useEffect(() => {
-       
+        const records = localStorage.getItem("leaveRecords");
+        if (records) {
+            const parsedRecords = JSON.parse(records);
+            setLeaveRecords(parsedRecords);
+            setFilteredRecords(parsedRecords);
+            setShowData(true);
+        }
         getEmployees()
     }, []);
 
@@ -53,7 +56,8 @@ const AdminLeaveRecords = () => {
                 }
             );
             const employeesData = response.data.data;
-            const getEmpWithNameAndId = await employeesData.map((data) => {
+            console.log(employeesData)
+            const getEmpWithNameAndId = employeesData.map((data) => {
                 return {
                     label: data.first_name + " " + data.last_name,
                     value: data.first_name + " " + data.last_name,
@@ -126,53 +130,11 @@ const AdminLeaveRecords = () => {
     }
 
 
-    // console.log("timeOffTypes", timeOffTypes)
-
-    useEffect(()=>{
-        getAllLeaveRecords()
-    }, [employees])
-
-    const getAllLeaveRecords = async () => {
-        try {
-            const response = await axios.get(
-                `http://localhost:3002/api/routes/time-off/view-timeoff/${userId}`,
-                {
-                    headers: {
-                        authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-            console.log(response.data.data)
-            const leaveData = response.data.data.map((leave, ind) => {
-                console.log(leave)
-                console.log(employees)
-                const user = employees.find((emp, ind) => emp.id == leave.user_id);
-                console.log(user)
-                return {
-                    ...leave,
-                    first_name: user.label,
-                    email: user?.email,
-                    colorPairs: colorPairs[ind % colorPairs.length]
-                };
-            });
-            console.log(leaveData)
-            localStorage.setItem("leaveRecords", JSON.stringify(leaveData));
-            setLeaveRecords(leaveData)
-            setFilteredRecords(leaveData)
-            const onlyLeave = leaveData.filter((data) => data.timeoff_type !== "permission");
-            const onlyPermission = leaveData.filter((data) => data.timeoff_type === "permission");
-            setLeaveRequests(leaveData);
-            const pendingLeave = onlyLeave.filter((leave) => leave.status_name === "Requested");
-            const pendingPermission = onlyPermission.filter((leave) => leave.status_name === "Requested");
-            setShowData(true)
-        } catch (error) {
-            console.error("Error fetching leave records:", error);
-        }
-    };
+    console.log("timeOffTypes", timeOffTypes)
 
     return (
         <div className="p-6 bg-[#F8F9FA] min-h-screen">
-            <div className=" mx-auto bg-white rounded-xl shadow-sm">
+            <div className="max-w-full mx-auto bg-white rounded-xl shadow-sm">
                 <div className="p-4 border-b border-gray-200">
                     <div className="flex justify-between items-center">
                         <div>
@@ -202,14 +164,14 @@ const AdminLeaveRecords = () => {
                 <div className="p-4">
                     {showData ? (
                         filteredRecords.length > 0 ? (
-                            <div className=" min-h-screen">
+                            <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead>
                                         <tr className="bg-gray-50">
                                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
                                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
                                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Leave Type</th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
                                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                         </tr>
@@ -224,17 +186,27 @@ const AdminLeaveRecords = () => {
                                                     <div className="flex items-center">
                                                         <div className="flex-shrink-0 h-8 w-8">
                                                             <div
-                                                                className="text-[13px]"
-                                                                // style={{
-                                                                //     background: record.colorPairs.bgColor,
-                                                                //     color: record.colorPairs.color,
-                                                                // }}
+                                                                className="h-8 w-8 rounded-full flex items-center justify-center"
+                                                                style={{
+                                                                    background: record.colorPairs.bgColor,
+                                                                    color: record.colorPairs.color,
+                                                                }}
                                                             >
-                                                                {record.first_name}
-                                                                
+                                                                {record.first_name[0]}
+                                                                {record.last_name[0]}
                                                             </div>
                                                         </div>
-                                                        
+                                                        <div className="ml-4">
+                                                            <div className="text-sm font-medium text-gray-900">
+                                                                {record.first_name} {record.last_name}
+                                                            </div>
+                                                            <div className="text-sm text-gray-500"
+                                                                style={{
+                                                                    color: record.colorPairs.color,
+                                                                }}>
+                                                                {record.email}
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3 text-sm text-gray-900">
@@ -287,7 +259,7 @@ const AdminLeaveRecords = () => {
             </div>
             {showLeaveDetails && selectedLeave && (
                 <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black bg-opacity-50">
-                    <ViewLeaveForm
+                    <LeaveDetailsForm
                         data={selectedLeave}
                         onClose={() => setShowLeaveDetails(false)}
                         updateLeaveStatus={updateLeaveStatus}
@@ -298,4 +270,4 @@ const AdminLeaveRecords = () => {
     );
 };
 
-export default AdminLeaveRecords;
+export default LeaveRecords;

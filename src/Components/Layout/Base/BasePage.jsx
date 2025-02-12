@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import Navbar from "../Navbar/NavBar";
 import HRMSDashboard from "../../../Pages/Dashboard/Dashboard";
 import NavHome from "../Navbar/NavHome";
-import { ShieldCheck } from "lucide-react";
+import { Bell, ShieldCheck } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import styled from 'styled-components';
 import { AuthContext } from "../../../Router";
@@ -40,7 +40,13 @@ let BasePage = ({ children }) => {
           <p className="flex gap-1 font-bold">
             <ShieldCheck className="text-[blue] text-2xl" />HRMS
           </p>
-          <LogoutButton />
+          <div className="flex gap-10 items-center justify-center">
+            <p className="cursor-pointer text-red-400">
+              <Bell size={22} strokeWidth={2} />
+            </p>
+
+            <LogoutButton />
+          </div>
         </div>
       </div>
       <div className="flex pt-[80px] h-full w-full gap-1">
